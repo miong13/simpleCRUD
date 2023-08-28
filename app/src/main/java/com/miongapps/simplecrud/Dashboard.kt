@@ -8,6 +8,7 @@ import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
 import android.widget.Button
+import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
@@ -26,6 +27,7 @@ class Dashboard : AppCompatActivity(), UsersAdapter.ClickListener {
     var sharedPrefs : SharedPreferences? = null
     var PREFS_KEY = "pref"
     var LOGGED_IN = "loggedIn"
+    var LOGGED_USERFN = "loggedUserFN"
     var is_loggedIn = ""
 
     private lateinit var newRecycleView : RecyclerView
@@ -34,23 +36,19 @@ class Dashboard : AppCompatActivity(), UsersAdapter.ClickListener {
     lateinit var imageId : Array<Int>
     lateinit var txtHeading : Array<String>
 
+    private lateinit var lblWelcome : TextView
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_dashboard)
 
         sharedPrefs = getSharedPreferences(PREFS_KEY, Context.MODE_PRIVATE)
+        lblWelcome = findViewById(R.id.lblWelcome)
         btnAddNew = findViewById(R.id.btnAddNew)
         btnLogout = findViewById(R.id.btnLogout)
         btnLogout.setOnClickListener{
 //            MainActivity().sharedPrefs!!.edit().clear().apply()
-            val editor : SharedPreferences.Editor = sharedPrefs!!.edit();
-            editor.clear()
-            editor.apply()
-
-            var LogInIntent = Intent(this, MainActivity::class.java)
-            startActivity(LogInIntent)
-            finish()
+              logMeOut()
         }
 
         btnAddNew.setOnClickListener {
@@ -89,7 +87,15 @@ class Dashboard : AppCompatActivity(), UsersAdapter.ClickListener {
         newRecycleView.setHasFixedSize(true)
 
         newUserList = arrayListOf<UsersDataClass>()
-        getUserdata()
+
+        is_loggedIn = sharedPrefs!!.getString(LOGGED_IN, "").toString()
+        lblWelcome.text = "WELCOME " + sharedPrefs!!.getString(LOGGED_USERFN, "").toString() + "!"
+        if(is_loggedIn.equals("true")){
+            getUserdata()
+        }else{
+            logMeOut()
+        }
+
 //        loadDataRecycler()
     }
 
@@ -307,6 +313,16 @@ class Dashboard : AppCompatActivity(), UsersAdapter.ClickListener {
             itemRecyclerAdapter.notifyItemInserted(pos)
 
         }
+    }
+
+    private fun logMeOut(){
+        val editor : SharedPreferences.Editor = sharedPrefs!!.edit();
+        editor.clear()
+        editor.apply()
+
+        var LogInIntent = Intent(this, MainActivity::class.java)
+        startActivity(LogInIntent)
+        finish()
     }
 
 }

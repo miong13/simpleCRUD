@@ -25,4 +25,14 @@ class SelectedUserActivity : AppCompatActivity() {
         txtName.text = employeeName
         txtEmail.text = employeeEmail
     }
+
+    override fun onStart() {
+        super.onStart()
+        this.overridePendingTransition(R.anim.anim_slide_in_left, R.anim.anim_slide_out_left)
+    }
+
+    override fun finish() {
+        super.finish()
+        this.overridePendingTransition(R.anim.animation_enter, R.anim.animation_leave)
+    }
 }

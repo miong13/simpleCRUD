@@ -4,6 +4,7 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:background="@drawable/login_background"
     tools:context=".MainActivity">
 
     <TextView
@@ -22,47 +23,47 @@
         android:layout_width="320dp"
         android:layout_height="wrap_content"
         android:layout_marginStart="50dp"
-        android:layout_marginTop="200dp"
+        android:layout_marginTop="10dp"
         android:ems="10"
         android:inputType="textEmailAddress"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
+        app:layout_constraintTop_toBottomOf="@+id/textView" />
 
     <TextView
         android:id="@+id/textView2"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginStart="50dp"
-        android:layout_marginTop="300dp"
+        android:layout_marginTop="40dp"
         android:text="Password"
         android:textAppearance="@style/TextAppearance.AppCompat.Medium"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
+        app:layout_constraintTop_toBottomOf="@+id/etEmail" />
 
     <EditText
         android:id="@+id/etPword"
         android:layout_width="320dp"
         android:layout_height="wrap_content"
         android:layout_marginStart="50dp"
-        android:layout_marginTop="350dp"
+        android:layout_marginTop="10dp"
         android:ems="10"
         android:inputType="textPassword"
         android:minHeight="48dp"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
+        app:layout_constraintTop_toBottomOf="@+id/textView2" />
 
 
     <Button
         android:id="@+id/btnLogin"
-        android:layout_width="wrap_content"
+        android:layout_width="150dp"
         android:layout_height="wrap_content"
-        android:layout_marginStart="50dp"
-        android:layout_marginTop="420dp"
+        android:layout_marginTop="15dp"
         android:paddingLeft="20dp"
         android:paddingRight="20dp"
         android:text="LOGIN"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
+        app:cornerRadius="32dp"
+        app:layout_constraintStart_toStartOf="@+id/etPword"
+        app:layout_constraintTop_toBottomOf="@+id/etPword" />
 
     <TextView
         android:id="@+id/tvAlertMessages"
@@ -71,6 +72,16 @@
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/etPword" />
+
+    <TextView
+        android:id="@+id/txtRegister"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="30dp"
+        android:text="Register?"
+        android:textSize="14dp"
+        app:layout_constraintEnd_toEndOf="@+id/etPword"
         app:layout_constraintTop_toBottomOf="@+id/etPword" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>
