@@ -11,4 +11,6 @@
     <color name="red">#FF0000</color>
     <color name="custom_blue">#6376DD</color>
     <color name="orangeRed">#FF6100</color>
+    <color name="color_worst_tip">#DC1E0B</color>
+    <color name="color_best_tip">#35BA01</color>
 </resources>

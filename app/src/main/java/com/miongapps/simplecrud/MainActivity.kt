@@ -1,9 +1,11 @@
 package com.miongapps.simplecrud
 
+import android.Manifest
 import android.app.AlertDialog
 import android.content.Context
 import android.content.Intent
 import android.content.SharedPreferences
+import android.content.pm.PackageManager
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
@@ -14,6 +16,9 @@ import android.widget.EditText
 import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.app.ActivityCompat
+import androidx.core.content.ContextCompat
+import org.json.JSONObject
 
 
 private const val TAG = "MainActivity"
@@ -30,6 +35,9 @@ class MainActivity : AppCompatActivity() {
     var PREFS_KEY = "pref"
     var LOGGED_IN = "loggedIn"
     var LOGGED_USERFN = "loggedUserFN"
+    var LOGGED_USEREM = "loggedUserEM"
+    var LOGGED_USERPH = "loggedUserPH"
+    var LOGGED_USERID = "loggedUserID"
     var is_loggedIn = ""
     var resultApi : String? = null
 
@@ -40,6 +48,12 @@ class MainActivity : AppCompatActivity() {
 
         sharedPrefs = getSharedPreferences(PREFS_KEY, Context.MODE_PRIVATE)
         is_loggedIn = sharedPrefs!!.getString(LOGGED_IN, "").toString()
+
+        if(is_loggedIn.equals("true")){
+            val DashboardIntent = Intent(this, Dashboard::class.java)
+            startActivity(DashboardIntent)
+            finish()
+        }
 
         tvAlertMessages = findViewById(R.id.tvAlertMessages)
         txtRegister = findViewById(R.id.txtRegister)
@@ -62,27 +76,49 @@ class MainActivity : AppCompatActivity() {
                 etPword.clearFocus()
                 tvAlertMessages.text = ""
                 if(isValidEmail(email)){
-                    ApiRequest().loginEmployee(email, pword) { mess ->
+                    ApiRequest().loginEmployee(email, pword) { result ->
 //                    println("MARKRAMOS REQUEST RESULT - $mess")
-                        if(mess.equals("error")){
-                            ERROR_MSG = "Wrong Email and Password Combination!"
-//                        ToastAlert(ERROR_MSG)
-//                        tvAlertMessages.text = ERROR_MSG + ""
-
-                            Handler(Looper.getMainLooper()).post {
-                                // write your code here
-                                alertDialog("Error",  ERROR_MSG + "", false)
+                        println("LOGIN: $result")
+                        if(result.length() > 0) {
+                            println(result.length())
+                            println(result.get("err"));
+                            when(result.get("err").toString()) {
+                                "error" -> {
+                                    ERROR_MSG = "Wrong Email and Password Combination!"
+                                    Handler(Looper.getMainLooper()).post {
+                                        // write your code here
+                                        alertDialog("Error",  ERROR_MSG + "", false)
+                                    }
+                                }
+                                "inactive" -> {
+                                    ERROR_MSG = "The user in inactive!"
+                                    Handler(Looper.getMainLooper()).post {
+                                        // write your code here
+                                        alertDialog("Error",  ERROR_MSG + "", false)
+                                    }
+                                }
+                                "success" -> {
+                                    val editor: SharedPreferences.Editor = sharedPrefs!!.edit()
+                                    editor.putString(LOGGED_IN, "true")
+                                    editor.putString(LOGGED_USERFN, result.get("full_name").toString())
+                                    editor.putString(LOGGED_USEREM, result.get("email").toString())
+                                    editor.putString(LOGGED_USERPH, result.get("photo").toString())
+                                    editor.putString(LOGGED_USERID, result.get("uuid").toString())
+                                    editor.apply()
+                                    val DashboardIntent = Intent(this, Dashboard::class.java)
+                                    startActivity(DashboardIntent)
+                                    finish()
+                                }
+                                else -> {
+                                    ERROR_MSG = "Please contact developer!"
+                                    Handler(Looper.getMainLooper()).post {
+                                        // write your code here
+                                        alertDialog("Error",  ERROR_MSG + "", false)
+                                    }
+                                }
                             }
-                        }else{
-                            val editor: SharedPreferences.Editor = sharedPrefs!!.edit()
-                            editor.putString(LOGGED_IN, "true")
-                            editor.putString(LOGGED_USERFN, mess)
-                            editor.apply()
-
-                            val DashboardIntent = Intent(this, Dashboard::class.java)
-                            startActivity(DashboardIntent)
-                            finish()
                         }
+
                     }
                 }else{
                     ToastAlert("Invalid Email Format!")
@@ -106,6 +142,19 @@ class MainActivity : AppCompatActivity() {
             val DashboardIntent = Intent(this, Dashboard::class.java)
             startActivity(DashboardIntent)
             finish()
+        }
+
+        if (ContextCompat.checkSelfPermission(this@MainActivity,
+                Manifest.permission.ACCESS_FINE_LOCATION) !==
+            PackageManager.PERMISSION_GRANTED) {
+            if (ActivityCompat.shouldShowRequestPermissionRationale(this@MainActivity,
+                    Manifest.permission.CAMERA)) {
+                ActivityCompat.requestPermissions(this@MainActivity,
+                    arrayOf(Manifest.permission.CAMERA), 1)
+            } else {
+                ActivityCompat.requestPermissions(this@MainActivity,
+                    arrayOf(Manifest.permission.CAMERA), 1)
+            }
         }
     }
 
@@ -131,6 +180,26 @@ class MainActivity : AppCompatActivity() {
             println("CLICK REGISTER!")
             startActivity(Intent(this, RegisterActivity::class.java))
 //            finish()
+        }
+    }
+
+    override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<String>,
+                                            grantResults: IntArray) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults)
+        when (requestCode) {
+            1 -> {
+                if (grantResults.isNotEmpty() && grantResults[0] ==
+                    PackageManager.PERMISSION_GRANTED) {
+                    if ((ContextCompat.checkSelfPermission(this@MainActivity,
+                            Manifest.permission.CAMERA) ===
+                                PackageManager.PERMISSION_GRANTED)) {
+//                        Toast.makeText(this, "Camera Permission Granted", Toast.LENGTH_SHORT).show()
+                    }
+                } else {
+                    Toast.makeText(this, "Camera Permission Denied", Toast.LENGTH_SHORT).show()
+                }
+                return
+            }
         }
     }
 }

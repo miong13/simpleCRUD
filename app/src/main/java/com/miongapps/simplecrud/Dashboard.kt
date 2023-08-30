@@ -2,24 +2,27 @@ package com.miongapps.simplecrud
 
 import android.app.AlertDialog
 import android.content.Context
+import android.content.Intent
 import android.content.SharedPreferences
-import android.icu.lang.UCharacter.GraphemeClusterBreak.T
+import android.graphics.BitmapFactory
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
+import android.os.Parcelable
+import android.util.Base64
+import android.view.MenuItem
 import android.widget.Button
 import android.widget.TextView
 import android.widget.Toast
+import androidx.appcompat.app.ActionBarDrawerToggle
 import androidx.appcompat.app.AppCompatActivity
-import androidx.core.content.ContextCompat
+import androidx.drawerlayout.widget.DrawerLayout
 import androidx.recyclerview.widget.ItemTouchHelper
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
-import com.google.android.material.snackbar.BaseTransientBottomBar
-import com.google.android.material.snackbar.Snackbar
-import java.util.*
-import kotlin.collections.ArrayList
-import android.content.Intent as Intent
+import com.google.android.material.navigation.NavigationView
+import de.hdodenhof.circleimageview.CircleImageView
+
 
 class Dashboard : AppCompatActivity(), UsersAdapter.ClickListener {
     private lateinit var btnLogout : Button
@@ -28,6 +31,10 @@ class Dashboard : AppCompatActivity(), UsersAdapter.ClickListener {
     var PREFS_KEY = "pref"
     var LOGGED_IN = "loggedIn"
     var LOGGED_USERFN = "loggedUserFN"
+    var LOGGED_USEREM = "loggedUserEM"
+    var LOGGED_USERPH = "loggedUserPH"
+    var LOGGED_USERID = "loggedUserID"
+    var is_RecyclerLoaded = "loadedRecycler"
     var is_loggedIn = ""
 
     private lateinit var newRecycleView : RecyclerView
@@ -38,17 +45,43 @@ class Dashboard : AppCompatActivity(), UsersAdapter.ClickListener {
 
     private lateinit var lblWelcome : TextView
 
+    lateinit var toggle : ActionBarDrawerToggle
+    private lateinit var lblUserFullName : TextView
+    private lateinit var circleImgProfilePic : CircleImageView
+    private lateinit var lblUserEmail : TextView
+    private lateinit var btnReloadList : Button
+    var userID : String? = null
+
+    var recyclerViewState: Parcelable? = null
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_dashboard)
 
+        val drawerLayout : DrawerLayout = findViewById(R.id.dashboard_drawer)
+        val navView : NavigationView =  findViewById(R.id.nav_view)
+        toggle = ActionBarDrawerToggle(this, drawerLayout, R.string.open, R.string.close)
+        drawerLayout.addDrawerListener(toggle)
+        toggle.syncState()
+
+        supportActionBar?.setDisplayHomeAsUpEnabled(true)
+
         sharedPrefs = getSharedPreferences(PREFS_KEY, Context.MODE_PRIVATE)
         lblWelcome = findViewById(R.id.lblWelcome)
+
+        circleImgProfilePic = navView.getHeaderView(0).findViewById(R.id.circleImgProfilePic)
+        lblUserFullName = navView.getHeaderView(0).findViewById(R.id.lblUserFullName)
+        lblUserEmail = navView.getHeaderView(0).findViewById(R.id.lblUserEmail)
+
         btnAddNew = findViewById(R.id.btnAddNew)
+        btnReloadList = findViewById(R.id.btnReloadList)
         btnLogout = findViewById(R.id.btnLogout)
         btnLogout.setOnClickListener{
 //            MainActivity().sharedPrefs!!.edit().clear().apply()
               logMeOut()
+        }
+
+        btnReloadList.setOnClickListener {
+            getUserdata()
         }
 
         btnAddNew.setOnClickListener {
@@ -61,7 +94,7 @@ class Dashboard : AppCompatActivity(), UsersAdapter.ClickListener {
         imageId = arrayOf(
             R.drawable.markramos2x2,
             R.drawable.login_4557368,
-            R.drawable.login_4557368,
+            R.drawable.profile_5004140,
             R.drawable.login_4557368,
             R.drawable.login_4557368,
             R.drawable.login_4557368,
@@ -90,20 +123,75 @@ class Dashboard : AppCompatActivity(), UsersAdapter.ClickListener {
 
         is_loggedIn = sharedPrefs!!.getString(LOGGED_IN, "").toString()
         lblWelcome.text = "WELCOME " + sharedPrefs!!.getString(LOGGED_USERFN, "").toString() + "!"
+        lblUserFullName.text = sharedPrefs!!.getString(LOGGED_USERFN, "").toString()
+        lblUserEmail.text = sharedPrefs!!.getString(LOGGED_USEREM, "").toString()
+        var userPhoto  =  sharedPrefs!!.getString(LOGGED_USERPH, "").toString()
+        userID = sharedPrefs!!.getString(LOGGED_USERID, "").toString()
+        if(userPhoto.equals("null")){
+            circleImgProfilePic.setImageResource(imageId[2])
+        }else{
+            val decodedString: ByteArray = Base64.decode(userPhoto, Base64.DEFAULT)
+            val decodedByte = BitmapFactory.decodeByteArray(decodedString, 0, decodedString.size)
+            circleImgProfilePic.setImageBitmap(decodedByte)
+        }
+
         if(is_loggedIn.equals("true")){
-            getUserdata()
+            //DO NOTHING
+            //getUserdata()
         }else{
             logMeOut()
         }
 
-//        loadDataRecycler()
+
+        navView.setNavigationItemSelectedListener {
+            when(it.itemId){
+                R.id.nav_userprofile -> {
+//                    startActivity(Intent(this, EditProfileActivity::class.java))
+                    editProfileData()
+                }
+                R.id.nav_logout -> {
+                    val alertDialog: AlertDialog.Builder = AlertDialog.Builder(this@Dashboard)
+                    alertDialog.setTitle("LOGOUT???")
+                    alertDialog.setMessage("Are you sure you want to logout?")
+                    alertDialog.setPositiveButton(
+                        "yes"
+                    ) { _, _ ->
+                        // Log me out
+                        logMeOut()
+                    }
+                    alertDialog.setNegativeButton(
+                        "No"
+                    ) { _, _ ->
+                        // Nothing to do here
+                    }
+                    val alert: AlertDialog = alertDialog.create()
+                    alert.setCanceledOnTouchOutside(false)
+                    alert.show()
+                }
+            }
+            true
+        }
+    }
+
+    override fun onStart() {
+        super.onStart()
+        getUserdata()
+    }
+    override fun onPause() {
+        super.onPause()
+        recyclerViewState = newRecycleView.layoutManager?.onSaveInstanceState()//save
+    }
+
+    override fun onResume() {
+        super.onResume()
+        newRecycleView.layoutManager?.onRestoreInstanceState(recyclerViewState)//restore
     }
 
     private fun getUserdata(){
         Toast.makeText(this@Dashboard, "LOADING LIST...", Toast.LENGTH_SHORT).show()
         ApiRequest().getListEmployees { returnArray ->
             if(returnArray.length() > 0) {
-                println(returnArray.length());
+                println(returnArray.length())
 //                val len: Int = returnArray.length()
                 for (i in 0..(returnArray.length()-1)) {
                     println("GET USER DATA")
@@ -112,9 +200,10 @@ class Dashboard : AppCompatActivity(), UsersAdapter.ClickListener {
                     val EmployeeID : String = item.get("user_id").toString()
                     val EmployeeName : String = item.get("full_name").toString()
                     val EmployeeEmail : String = item.get("email").toString()
+                    val EmployeePhoto : String = item.get("photo").toString()
 //                    println(EmployeeName)
 //                    println(imageId[0])
-                    val users = UsersDataClass(imageId[1], EmployeeID, EmployeeName, EmployeeEmail)
+                    val users = UsersDataClass(imageId[1], EmployeeID, EmployeeName, EmployeeEmail, EmployeePhoto)
                     newUserList.add(users)
                 }
                 println(newUserList)
@@ -154,27 +243,44 @@ class Dashboard : AppCompatActivity(), UsersAdapter.ClickListener {
                             alertDialog.setPositiveButton(
                                 "yes"
                             ) { _, _ ->
-                                Toast.makeText(this@Dashboard, "Deleting...", Toast.LENGTH_SHORT).show()
-                                ApiRequest().deleteEmployee(deleteItem){
-                                    result ->
+                                if(userID.equals(deleteItem.userId)){
+                                    Handler(Looper.getMainLooper()).post {
+                                        Toast.makeText(this@Dashboard, "You cannot remove your own data!", Toast.LENGTH_LONG).show()
+                                    }
+                                    newUserList.removeAt(position)
+                                    itemRecyclerAdapter.notifyItemRemoved(position)
+                                    newUserList.add(position, deleteItem)
+                                    itemRecyclerAdapter.notifyItemInserted(position)
+                                }else {
+                                    Toast.makeText(this@Dashboard, "Deleting...", Toast.LENGTH_SHORT).show()
+                                    ApiRequest().deleteEmployee(deleteItem) { result ->
+                                        if (result.equals("This record cannot be deleted!")) {
+                                            Handler(Looper.getMainLooper()).post {
+                                                Toast.makeText(
+                                                    this@Dashboard,
+                                                    result,
+                                                    Toast.LENGTH_LONG
+                                                ).show()
+                                            }
+                                            newUserList.removeAt(position)
+                                            itemRecyclerAdapter.notifyItemRemoved(position)
+                                            newUserList.add(position, deleteItem)
+                                            itemRecyclerAdapter.notifyItemInserted(position)
+                                        } else {
+                                            Handler(Looper.getMainLooper()).post {
+                                                Toast.makeText(
+                                                    this@Dashboard,
+                                                    result,
+                                                    Toast.LENGTH_LONG
+                                                ).show()
+                                            }
+                                            newUserList.removeAt(position)
+                                            itemRecyclerAdapter.notifyItemRemoved(position)
+                                        }
 
-                                    if(result.equals("This record cannot be deleted!")){
-                                        Handler(Looper.getMainLooper()).post {
-                                            Toast.makeText(this@Dashboard, result, Toast.LENGTH_LONG).show()
-                                        }
-                                        newUserList.removeAt(position)
-                                        itemRecyclerAdapter.notifyItemRemoved(position)
-                                        newUserList.add(position, deleteItem)
-                                        itemRecyclerAdapter.notifyItemInserted(position)
-                                    }else{
-                                        Handler(Looper.getMainLooper()).post {
-                                            Toast.makeText(this@Dashboard, result, Toast.LENGTH_LONG).show()
-                                        }
-                                        newUserList.removeAt(position)
-                                        itemRecyclerAdapter.notifyItemRemoved(position)
+
                                     }
                                 }
-
 
 //                                val snackbar=Snackbar.make(this@Dashboard.newRecycleView, "Item deleted!", Snackbar.LENGTH_LONG)
 //                                    .addCallback(object :BaseTransientBottomBar.BaseCallback<Snackbar>(){
@@ -282,6 +388,7 @@ class Dashboard : AppCompatActivity(), UsersAdapter.ClickListener {
         extras.putString("userId", currentItem.userId)
         extras.putString("fullname", currentItem.fullname)
         extras.putString("email", currentItem.email)
+        extras.putString("photo", currentItem.photo)
         extras.putInt("position", position)
         intent.putExtras(extras)
         startActivity(intent)
@@ -294,7 +401,21 @@ class Dashboard : AppCompatActivity(), UsersAdapter.ClickListener {
         extras.putString("userId", currentItem.userId)
         extras.putString("fullname", currentItem.fullname)
         extras.putString("email", currentItem.email)
+        extras.putString("photo", currentItem.photo)
         extras.putInt("position", position)
+        intent.putExtras(extras)
+        startActivity(intent)
+    }
+
+    private fun editProfileData(){
+        val intent = Intent(this, EditProfileActivity::class.java)
+        val extras = Bundle()
+        extras.putInt("imageId", 0)
+        extras.putString("userId", sharedPrefs!!.getString(LOGGED_USERID, "").toString())
+        extras.putString("fullname", sharedPrefs!!.getString(LOGGED_USERFN, "").toString())
+        extras.putString("email", sharedPrefs!!.getString(LOGGED_USEREM, "").toString())
+        extras.putString("photo", sharedPrefs!!.getString(LOGGED_USERPH, "").toString())
+        extras.putInt("position", 0)
         intent.putExtras(extras)
         startActivity(intent)
     }
@@ -303,9 +424,9 @@ class Dashboard : AppCompatActivity(), UsersAdapter.ClickListener {
         var intent_extras = intent.extras
         if (intent.hasExtra("fullname")) {
             var employeeNameEdit = intent_extras!!.getString("fullname").toString()
-            var employeeEmailEdit = intent_extras!!.getString("email").toString()
-            var pos = intent_extras!!.getInt("position")
-            var update_data = UsersDataClass(imageId[1], "", employeeNameEdit, employeeEmailEdit)
+            var employeeEmailEdit = intent_extras.getString("email").toString()
+            var pos = intent_extras.getInt("position")
+            var update_data = UsersDataClass(imageId[1], "", employeeNameEdit, employeeEmailEdit, "")
 
             newUserList.removeAt(pos)
             itemRecyclerAdapter.notifyItemRemoved(pos)
@@ -316,7 +437,7 @@ class Dashboard : AppCompatActivity(), UsersAdapter.ClickListener {
     }
 
     private fun logMeOut(){
-        val editor : SharedPreferences.Editor = sharedPrefs!!.edit();
+        val editor : SharedPreferences.Editor = sharedPrefs!!.edit()
         editor.clear()
         editor.apply()
 
@@ -324,5 +445,15 @@ class Dashboard : AppCompatActivity(), UsersAdapter.ClickListener {
         startActivity(LogInIntent)
         finish()
     }
+
+    override fun onOptionsItemSelected(item: MenuItem): Boolean {
+        if(toggle.onOptionsItemSelected(item)){
+            return true
+        }
+        return super.onOptionsItemSelected(item)
+    }
+
+
+
 
 }
