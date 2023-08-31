@@ -18,7 +18,6 @@ import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
-import org.json.JSONObject
 
 
 private const val TAG = "MainActivity"
@@ -38,7 +37,7 @@ class MainActivity : AppCompatActivity() {
     var LOGGED_USEREM = "loggedUserEM"
     var LOGGED_USERPH = "loggedUserPH"
     var LOGGED_USERID = "loggedUserID"
-    var is_loggedIn = ""
+    var is_loggedIn : String? = null
     var resultApi : String? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -127,6 +126,7 @@ class MainActivity : AppCompatActivity() {
             }
         }
 
+        this.onBackPressedDispatcher
     }
 
     fun ToastAlert(message: String){
@@ -201,6 +201,9 @@ class MainActivity : AppCompatActivity() {
                 return
             }
         }
+    }
+    override fun onBackPressed() {
+
     }
 }
 

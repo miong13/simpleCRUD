@@ -35,7 +35,7 @@ class Dashboard : AppCompatActivity(), UsersAdapter.ClickListener {
     var LOGGED_USERPH = "loggedUserPH"
     var LOGGED_USERID = "loggedUserID"
     var is_RecyclerLoaded = "loadedRecycler"
-    var is_loggedIn = ""
+    var is_loggedIn : String? = null
 
     private lateinit var newRecycleView : RecyclerView
     private lateinit var newUserList : ArrayList<UsersDataClass>
@@ -56,7 +56,7 @@ class Dashboard : AppCompatActivity(), UsersAdapter.ClickListener {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_dashboard)
-
+        println("START DASHBOARD - CREATE")
         val drawerLayout : DrawerLayout = findViewById(R.id.dashboard_drawer)
         val navView : NavigationView =  findViewById(R.id.nav_view)
         toggle = ActionBarDrawerToggle(this, drawerLayout, R.string.open, R.string.close)
@@ -66,6 +66,15 @@ class Dashboard : AppCompatActivity(), UsersAdapter.ClickListener {
         supportActionBar?.setDisplayHomeAsUpEnabled(true)
 
         sharedPrefs = getSharedPreferences(PREFS_KEY, Context.MODE_PRIVATE)
+        is_loggedIn = sharedPrefs!!.getString(LOGGED_IN, "").toString()
+        if(is_loggedIn.equals("true")){
+            getUserdata()
+        }else{
+            logMeOut()
+//            val DashboardIntent = Intent(this, MainActivity::class.java)
+//            startActivity(DashboardIntent)
+//            finish()
+        }
         lblWelcome = findViewById(R.id.lblWelcome)
 
         circleImgProfilePic = navView.getHeaderView(0).findViewById(R.id.circleImgProfilePic)
@@ -76,7 +85,6 @@ class Dashboard : AppCompatActivity(), UsersAdapter.ClickListener {
         btnReloadList = findViewById(R.id.btnReloadList)
         btnLogout = findViewById(R.id.btnLogout)
         btnLogout.setOnClickListener{
-//            MainActivity().sharedPrefs!!.edit().clear().apply()
               logMeOut()
         }
 
@@ -121,7 +129,7 @@ class Dashboard : AppCompatActivity(), UsersAdapter.ClickListener {
 
         newUserList = arrayListOf<UsersDataClass>()
 
-        is_loggedIn = sharedPrefs!!.getString(LOGGED_IN, "").toString()
+
         lblWelcome.text = "WELCOME " + sharedPrefs!!.getString(LOGGED_USERFN, "").toString() + "!"
         lblUserFullName.text = sharedPrefs!!.getString(LOGGED_USERFN, "").toString()
         lblUserEmail.text = sharedPrefs!!.getString(LOGGED_USEREM, "").toString()
@@ -135,13 +143,12 @@ class Dashboard : AppCompatActivity(), UsersAdapter.ClickListener {
             circleImgProfilePic.setImageBitmap(decodedByte)
         }
 
-        if(is_loggedIn.equals("true")){
-            //DO NOTHING
-            //getUserdata()
-        }else{
-            logMeOut()
-        }
-
+//        if(is_loggedIn.equals("true")){
+//            //DO NOTHING
+//            //getUserdata()
+//        }else{
+//            logMeOut()
+//        }
 
         navView.setNavigationItemSelectedListener {
             when(it.itemId){
@@ -171,38 +178,45 @@ class Dashboard : AppCompatActivity(), UsersAdapter.ClickListener {
             }
             true
         }
+
     }
 
     override fun onStart() {
         super.onStart()
-        getUserdata()
+        println("START DASHBOARD - ON")
+        println("START : " + is_loggedIn)
+        if(is_loggedIn.equals("true")){
+            println("START DASHBOARD - TRUE")
+            println("START : " + is_loggedIn)
+        }else{
+            println("START DASHBOARD - FALSE")
+            println("START : " + is_loggedIn)
+            startActivity(Intent(this, MainActivity::class.java))
+            finish()
+        }
     }
-    override fun onPause() {
-        super.onPause()
-        recyclerViewState = newRecycleView.layoutManager?.onSaveInstanceState()//save
-    }
-
-    override fun onResume() {
-        super.onResume()
-        newRecycleView.layoutManager?.onRestoreInstanceState(recyclerViewState)//restore
-    }
+//    override fun onPause() {
+//        super.onPause()
+//        recyclerViewState = newRecycleView.layoutManager?.onSaveInstanceState()//save
+//    }
+//
+//    override fun onResume() {
+//        super.onResume()
+//        newRecycleView.layoutManager?.onRestoreInstanceState(recyclerViewState)//restore
+//    }
 
     private fun getUserdata(){
         Toast.makeText(this@Dashboard, "LOADING LIST...", Toast.LENGTH_SHORT).show()
         ApiRequest().getListEmployees { returnArray ->
             if(returnArray.length() > 0) {
                 println(returnArray.length())
-//                val len: Int = returnArray.length()
                 for (i in 0..(returnArray.length()-1)) {
                     println("GET USER DATA")
                     val item = returnArray.getJSONObject(i)
-//                    println(item)
                     val EmployeeID : String = item.get("user_id").toString()
                     val EmployeeName : String = item.get("full_name").toString()
                     val EmployeeEmail : String = item.get("email").toString()
                     val EmployeePhoto : String = item.get("photo").toString()
-//                    println(EmployeeName)
-//                    println(imageId[0])
                     val users = UsersDataClass(imageId[1], EmployeeID, EmployeeName, EmployeeEmail, EmployeePhoto)
                     newUserList.add(users)
                 }
@@ -281,37 +295,6 @@ class Dashboard : AppCompatActivity(), UsersAdapter.ClickListener {
 
                                     }
                                 }
-
-//                                val snackbar=Snackbar.make(this@Dashboard.newRecycleView, "Item deleted!", Snackbar.LENGTH_LONG)
-//                                    .addCallback(object :BaseTransientBottomBar.BaseCallback<Snackbar>(){
-//                                        override fun onDismissed(
-//                                            transientBottomBar: Snackbar?,
-//                                            event: Int
-//                                        ) {
-//                                            super.onDismissed(transientBottomBar, event)
-//                                        }
-//
-//                                        override fun onShown(transientBottomBar: Snackbar?) {
-//                                            transientBottomBar?.setAction("UNDO"){
-//                                                newUserList.add(position, deleteItem)
-////                                            UsersAdapter(newUserList).notifyItemInserted(position)
-//                                                itemRecyclerAdapter.notifyItemInserted(position)
-//                                                actionBtnTapped=true
-//                                            }
-//                                            super.onShown(transientBottomBar)
-//                                        }
-//
-//                                    }).apply {
-//                                        animationMode= Snackbar.ANIMATION_MODE_FADE
-//                                    }
-//                                snackbar.setActionTextColor(
-//                                    ContextCompat.getColor(
-//                                        this@Dashboard,
-//                                        R.color.orangeRed
-//                                    )
-//                                )
-//
-//                                snackbar.show()
                             }
                             alertDialog.setNegativeButton(
                                 "No"
@@ -338,36 +321,6 @@ class Dashboard : AppCompatActivity(), UsersAdapter.ClickListener {
                             itemRecyclerAdapter.notifyItemInserted(position)
                             actionBtnTapped=true
                             editData(editItem, position)
-
-//                            val snackbar=Snackbar.make(this@Dashboard.newRecycleView, "Edit Item!", Snackbar.LENGTH_LONG)
-//                                .addCallback(object :BaseTransientBottomBar.BaseCallback<Snackbar>(){
-//                                    override fun onDismissed(
-//                                        transientBottomBar: Snackbar?,
-//                                        event: Int
-//                                    ) {
-//                                        super.onDismissed(transientBottomBar, event)
-//                                    }
-//
-//                                    override fun onShown(transientBottomBar: Snackbar?) {
-//                                        transientBottomBar?.setAction("UNDO"){
-//                                            newUserList.add(position, editItem)
-//                                            itemRecyclerAdapter.notifyItemInserted(position)
-//                                            actionBtnTapped=true
-//                                        }
-//                                        super.onShown(transientBottomBar)
-//                                    }
-//
-//                                }).apply {
-//                                    animationMode= Snackbar.ANIMATION_MODE_FADE
-//                                }
-//                            snackbar.setActionTextColor(
-//                                ContextCompat.getColor(
-//                                    this@Dashboard,
-//                                    R.color.orangeRed
-//                                )
-//                            )
-//
-//                            snackbar.show()
                         }
                     }
                 }catch (e:Exception){
@@ -437,13 +390,22 @@ class Dashboard : AppCompatActivity(), UsersAdapter.ClickListener {
     }
 
     private fun logMeOut(){
-        val editor : SharedPreferences.Editor = sharedPrefs!!.edit()
-        editor.clear()
+        println("START LOGOUT!")
+//        val editor : SharedPreferences.Editor = sharedPrefs!!.edit()
+//        editor.remove(LOGGED_IN).commit()
+//        editor.clear().commit()
+        //editor.apply()
+        // REMOVING OR CLEARING PREFS DOESN'T WORK IN SOME POINT
+        // WORKAROUND IS TO SET IT AS EMPTY
+        val editor: SharedPreferences.Editor = sharedPrefs!!.edit()
+        editor.putString(LOGGED_IN, "")
         editor.apply()
+        println("START : " + is_loggedIn)
 
         var LogInIntent = Intent(this, MainActivity::class.java)
         startActivity(LogInIntent)
         finish()
+        println("DONE LOGOUT!")
     }
 
     override fun onOptionsItemSelected(item: MenuItem): Boolean {

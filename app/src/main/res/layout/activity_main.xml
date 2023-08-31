@@ -14,6 +14,7 @@
         android:layout_marginStart="50dp"
         android:layout_marginTop="150dp"
         android:text="Email"
+        android:textColor="#FFFFFF"
         android:textAppearance="@style/TextAppearance.AppCompat.Medium"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
@@ -25,6 +26,8 @@
         android:layout_marginStart="50dp"
         android:layout_marginTop="10dp"
         android:ems="10"
+        android:textColor="#FFFFFF"
+        android:backgroundTint="#FFFFFF"
         android:inputType="textEmailAddress"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/textView" />
@@ -36,6 +39,7 @@
         android:layout_marginStart="50dp"
         android:layout_marginTop="40dp"
         android:text="Password"
+        android:textColor="#FFFFFF"
         android:textAppearance="@style/TextAppearance.AppCompat.Medium"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/etEmail" />
@@ -49,6 +53,8 @@
         android:ems="10"
         android:inputType="textPassword"
         android:minHeight="48dp"
+        android:textColor="#FFFFFF"
+        android:backgroundTint="#FFFFFF"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/textView2" />
 

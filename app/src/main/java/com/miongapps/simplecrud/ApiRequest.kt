@@ -8,6 +8,7 @@ import org.json.JSONObject
 class ApiRequest {
     private val server_url : String = "https://simplecrud.markramosonline.com"
 
+    // GET LIST OF EMPLOYEES
     fun getListEmployees(returnResult : (JSONArray) -> Unit){
         println("GET EMPLOYEES")
         val endPointURL = "/api/listemployee"
@@ -24,6 +25,7 @@ class ApiRequest {
             }
     }
 
+    // LOGIN EMPLOYEE
     fun loginEmployee(uname: Editable, pword: Editable, returnResult : (JSONObject) -> Unit){
         val endPointURL = "/api/signin"
         val URLwithParams = server_url + endPointURL + "?email=$uname&pword=$pword"
@@ -39,6 +41,7 @@ class ApiRequest {
             }
     }
 
+    // REGISTER OR ADD EMPLOYEES TO DB
     fun registerEmployee(employeeDataClass: UsersDataClass, returnResult: (String) -> Unit){
         val endPointURL = "/api/addemployee"
         val email = employeeDataClass.email
@@ -54,6 +57,7 @@ class ApiRequest {
             }
     }
 
+    // UPDATE OR EDIT EMPLOYEES TO DB
     fun updateEmployee(employeeDataClass: UsersDataClass, returnResult: (String) -> Unit){
         val endPointURL = "/api/updateemployee"
         val email = employeeDataClass.email
@@ -69,6 +73,7 @@ class ApiRequest {
             }
     }
 
+    // UPDATE OR EDIT EMPLOYEES TO DB WITH PHOTO IN Base64 STRING
     fun updateEmployeeWithPhoto(employeeDataClass: UsersDataClass, password: String, returnResult: (String) -> Unit){
         val endPointURL = "/api/updateemployeewp"
         val email = employeeDataClass.email
@@ -85,6 +90,7 @@ class ApiRequest {
             }
     }
 
+    // REMOVE OR DELETE EMPLOYEES FROM DB
     fun deleteEmployee(employeeDataClass: UsersDataClass, returnResult: (String) -> Unit){
         val endPointURL = "/api/deleteemployee"
         val userId = employeeDataClass.userId
@@ -98,6 +104,7 @@ class ApiRequest {
             }
     }
 
+    // REGISTER OR ADD EMPLOYEES TO DB WITH PHOTO in Base64 STRING
     fun registerEmployeeWithPhoto(employeeDataClass: UsersDataClass, password: String, returnResult: (String) -> Unit){
         val endPointURL = "/api/register"
         val email = employeeDataClass.email
