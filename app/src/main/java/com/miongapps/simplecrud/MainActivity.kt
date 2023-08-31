@@ -11,10 +11,8 @@ import android.os.Handler
 import android.os.Looper
 import android.text.TextUtils
 import android.util.Patterns
-import android.widget.Button
-import android.widget.EditText
-import android.widget.TextView
-import android.widget.Toast
+import android.view.View
+import android.widget.*
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
@@ -39,6 +37,7 @@ class MainActivity : AppCompatActivity() {
     var LOGGED_USERID = "loggedUserID"
     var is_loggedIn : String? = null
     var resultApi : String? = null
+    private lateinit var mainProgressBar : ProgressBar
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -47,6 +46,8 @@ class MainActivity : AppCompatActivity() {
 
         sharedPrefs = getSharedPreferences(PREFS_KEY, Context.MODE_PRIVATE)
         is_loggedIn = sharedPrefs!!.getString(LOGGED_IN, "").toString()
+
+        mainProgressBar = findViewById(R.id.mainProgressBar)
 
         if(is_loggedIn.equals("true")){
             val DashboardIntent = Intent(this, Dashboard::class.java)
@@ -75,24 +76,30 @@ class MainActivity : AppCompatActivity() {
                 etPword.clearFocus()
                 tvAlertMessages.text = ""
                 if(isValidEmail(email)){
+                    mainProgressBar.visibility = View.VISIBLE
                     ApiRequest().loginEmployee(email, pword) { result ->
 //                    println("MARKRAMOS REQUEST RESULT - $mess")
+
                         println("LOGIN: $result")
                         if(result.length() > 0) {
                             println(result.length())
                             println(result.get("err"));
                             when(result.get("err").toString()) {
                                 "error" -> {
+
                                     ERROR_MSG = "Wrong Email and Password Combination!"
                                     Handler(Looper.getMainLooper()).post {
                                         // write your code here
+                                        mainProgressBar.visibility = View.GONE
                                         alertDialog("Error",  ERROR_MSG + "", false)
                                     }
                                 }
                                 "inactive" -> {
+
                                     ERROR_MSG = "The user in inactive!"
                                     Handler(Looper.getMainLooper()).post {
                                         // write your code here
+                                        mainProgressBar.visibility = View.GONE
                                         alertDialog("Error",  ERROR_MSG + "", false)
                                     }
                                 }
@@ -112,6 +119,7 @@ class MainActivity : AppCompatActivity() {
                                     ERROR_MSG = "Please contact developer!"
                                     Handler(Looper.getMainLooper()).post {
                                         // write your code here
+                                        mainProgressBar.visibility = View.GONE
                                         alertDialog("Error",  ERROR_MSG + "", false)
                                     }
                                 }

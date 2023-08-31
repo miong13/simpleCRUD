@@ -11,7 +11,9 @@ import android.os.Looper
 import android.os.Parcelable
 import android.util.Base64
 import android.view.MenuItem
+import android.view.View
 import android.widget.Button
+import android.widget.ProgressBar
 import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.ActionBarDrawerToggle
@@ -53,6 +55,9 @@ class Dashboard : AppCompatActivity(), UsersAdapter.ClickListener {
     var userID : String? = null
 
     var recyclerViewState: Parcelable? = null
+
+    private lateinit var dashProgressBar : ProgressBar
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_dashboard)
@@ -67,6 +72,7 @@ class Dashboard : AppCompatActivity(), UsersAdapter.ClickListener {
 
         sharedPrefs = getSharedPreferences(PREFS_KEY, Context.MODE_PRIVATE)
         is_loggedIn = sharedPrefs!!.getString(LOGGED_IN, "").toString()
+        dashProgressBar = findViewById(R.id.dashProgressBar)
         if(is_loggedIn.equals("true")){
             getUserdata()
         }else{
@@ -77,6 +83,7 @@ class Dashboard : AppCompatActivity(), UsersAdapter.ClickListener {
         }
         lblWelcome = findViewById(R.id.lblWelcome)
 
+
         circleImgProfilePic = navView.getHeaderView(0).findViewById(R.id.circleImgProfilePic)
         lblUserFullName = navView.getHeaderView(0).findViewById(R.id.lblUserFullName)
         lblUserEmail = navView.getHeaderView(0).findViewById(R.id.lblUserEmail)
@@ -84,20 +91,6 @@ class Dashboard : AppCompatActivity(), UsersAdapter.ClickListener {
         btnAddNew = findViewById(R.id.btnAddNew)
         btnReloadList = findViewById(R.id.btnReloadList)
         btnLogout = findViewById(R.id.btnLogout)
-        btnLogout.setOnClickListener{
-              logMeOut()
-        }
-
-        btnReloadList.setOnClickListener {
-            getUserdata()
-        }
-
-        btnAddNew.setOnClickListener {
-            var AddUserIntent = Intent(this, AddUserActivity::class.java)
-            startActivity(AddUserIntent)
-//            finish()
-        }
-
         // TEST DATA
         imageId = arrayOf(
             R.drawable.markramos2x2,
@@ -179,6 +172,23 @@ class Dashboard : AppCompatActivity(), UsersAdapter.ClickListener {
             true
         }
 
+        btnLogout.setOnClickListener{
+            logMeOut()
+        }
+
+        btnReloadList.setOnClickListener {
+            newUserList.clear()
+            newRecycleView?.adapter?.notifyDataSetChanged()
+            getUserdata()
+        }
+
+        btnAddNew.setOnClickListener {
+            var AddUserIntent = Intent(this, AddUserActivity::class.java)
+            startActivity(AddUserIntent)
+//            finish()
+        }
+
+
     }
 
     override fun onStart() {
@@ -206,6 +216,7 @@ class Dashboard : AppCompatActivity(), UsersAdapter.ClickListener {
 //    }
 
     private fun getUserdata(){
+        dashProgressBar.visibility = View.VISIBLE
         Toast.makeText(this@Dashboard, "LOADING LIST...", Toast.LENGTH_SHORT).show()
         ApiRequest().getListEmployees { returnArray ->
             if(returnArray.length() > 0) {
@@ -222,6 +233,7 @@ class Dashboard : AppCompatActivity(), UsersAdapter.ClickListener {
                 }
                 println(newUserList)
                 Handler(Looper.getMainLooper()).post {
+                    dashProgressBar.visibility = View.GONE
                     itemRecyclerAdapter = UsersAdapter(newUserList, this)
 //                    newRecycleView.adapter = UsersAdapter(newUserList)
                     newRecycleView.adapter = itemRecyclerAdapter
